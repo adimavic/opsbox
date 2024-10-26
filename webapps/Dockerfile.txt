@@ -1,28 +1,46 @@
-# Use the official Ubuntu base image
-FROM ubuntu:latest
+#---------BASE IMAGE---------
 
-# Update and install required packages
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip apache2 libapache2-mod-wsgi-py3 && \
-    apt-get clean
+FROM   ubuntu:20.04
 
-# Set the working directory in the container
-WORKDIR /app
+#---------LABELS---------
 
-# Copy the application code and requirements file
-COPY . /app
+LABEL        maintainer="Aditya Kale adityakale732@gmail.com"
+LABEL        image="sample_app:1.0"
+LABEL        version="1.0"
+LABEL        description="Dockerfile for sample python web app"
 
-# Install Python dependencies
-RUN pip3 install -r requirements.txt
 
-# Configure Apache to serve the Flask app
-RUN echo "WSGIScriptAlias / /app/app.wsgi\n<Directory /app>\n    Require all granted\n</Directory>\n" > /etc/apache2/sites-available/000-default.conf
+#---------COPY FOLDERS---------
 
-# Create a WSGI file for Apache
-RUN echo "import sys\nsys.path.insert(0, '/app')\nfrom app import app as application" > /app/app.wsgi
+COPY   /python_project /var/www/FLASKAPPS/webapp/
+COPY   /requirement.txt   /tmp
 
-# Expose the container's port 80 for Apache
+#---------APP DEPENDENCIES---------
+
+RUN    apt-get clean && apt-get update -y
+RUN    apt-get install python3 -y && ln -s /usr/bin/python3 /usr/bin/python
+RUN    apt-get install apache2 libapache2-mod-wsgi-py3  -y
+RUN    apt-get update && apt-get install python3-pip libpq-dev -y
+# Installing python dependencies
+RUN    pip3 install --no-cache-dir -r /tmp/requirement.txt 
+
+
+# Configure Apache
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
+ 
+# Enable required Apache modules
+RUN a2enmod rewrite
+RUN a2enmod headers
+
+
+#---------CMD OR ENTRYPOINT---------
+
+# Start Apache in the foreground when the container starts
+CMD ["apache2ctl", "-D", "FOREGROUND"]
+
+#---------PORTS---------
+
+# Expose port 80 for incoming web traffic
 EXPOSE 80
 
-# Start Apache in the foreground (for Docker)
-CMD ["apachectl", "-D", "FOREGROUND"]
+# docker build --tag sample_app:1.0 -f Dockerfile .

@@ -1,0 +1,1 @@
+This is a sample Python-based web application deployed with Apache and Docker. Additionally, a webhook endpoint can be added to test API calls.
