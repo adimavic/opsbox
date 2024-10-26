@@ -1,0 +1,26 @@
+version: "3.7"
+services:
+  jenkins_master:
+    ports:
+    - "8080:8080"
+    - "50000:50000"
+    hostname: <Name of the host>
+    volumes:
+    - C:\Data\Jenkins:C:\ProgramData\jenkins\jenkinshome
+    networks:
+    - <Network_name>
+    image: jenkins/jenkins:windowsservercore-2019
+    deploy:
+     restart_policy:
+       condition: on-failure
+       delay: 5s
+       max_attempts: 3
+       window: 120s
+     mode: replicated
+     replicas: 1
+#volumes:
+  #jenkinsvolume:
+
+networks:
+  <Network_name>:
+    external: true
