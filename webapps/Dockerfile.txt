@@ -1,0 +1,28 @@
+# Use the official Ubuntu base image
+FROM ubuntu:latest
+
+# Update and install required packages
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip apache2 libapache2-mod-wsgi-py3 && \
+    apt-get clean
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the application code and requirements file
+COPY . /app
+
+# Install Python dependencies
+RUN pip3 install -r requirements.txt
+
+# Configure Apache to serve the Flask app
+RUN echo "WSGIScriptAlias / /app/app.wsgi\n<Directory /app>\n    Require all granted\n</Directory>\n" > /etc/apache2/sites-available/000-default.conf
+
+# Create a WSGI file for Apache
+RUN echo "import sys\nsys.path.insert(0, '/app')\nfrom app import app as application" > /app/app.wsgi
+
+# Expose the container's port 80 for Apache
+EXPOSE 80
+
+# Start Apache in the foreground (for Docker)
+CMD ["apachectl", "-D", "FOREGROUND"]
